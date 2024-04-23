@@ -1,15 +1,11 @@
-from sqlalchemy import create_engine, Integer, Column, String, Date, Float, Boolean, DateTime, ARRAY
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import create_engine, Integer, Column, String
 from sqlalchemy.orm import sessionmaker, declarative_base
-
-
 
 engine = create_engine("sqlite:///games.db")
 Session = sessionmaker(bind=engine)
 session = Session()
 
 Base = declarative_base()
-
 
 
 class Game(Base):
