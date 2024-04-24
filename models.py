@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine, Integer, Column, String
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 engine = create_engine("sqlite:///games.db")
 Session = sessionmaker(bind=engine)
@@ -9,7 +9,7 @@ Base = declarative_base()
 
 
 class Game(Base):
-    __tablename__ = 'Games'
+    __tablename__ = "Games"
     id = Column(Integer, primary_key=True, index=True)
     game_name = Column(String, index=True)
     platform = Column(String, index=True)

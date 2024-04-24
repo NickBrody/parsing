@@ -1,9 +1,9 @@
 from typing import List
 
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 
-from models import Game, session, Base, engine
+from models import Base, Game, engine, session
 
 game_name = input("Введите название игры: ")
 game_name_encode = game_name.replace(" ", "+")
@@ -12,13 +12,14 @@ game_name_for_txt = game_name.replace(" ", "_")
 URL = f"https://psprices.com/region-tr/games/?q={game_name_encode}&content_type="
 
 content = requests.get(URL)
-soup = BeautifulSoup(content.content, 'html.parser')
-links = soup.find_all('a')
-games = soup.find_all('span',
-                      {'class': "leading-5 line-clamp-2 underline-offset-2 group-hover:underline"})
-prices = soup.find_all('span', {'class': 'font-bold'})
+soup = BeautifulSoup(content.content, "html.parser")
+links = soup.find_all("a")
+games = soup.find_all(
+    "span", {"class": "leading-5 line-clamp-2 underline-offset-2 group-hover:underline"}
+)
+prices = soup.find_all("span", {"class": "font-bold"})
 
-platforms = soup.find_all('span', {'class': "flex items-center gap-1"})
+platforms = soup.find_all("span", {"class": "flex items-center gap-1"})
 
 
 def get_platforms():
@@ -29,13 +30,16 @@ def get_platforms():
         split_list = platform_arrays.split(" ")
 
         for element in split_list:
-            new_element = (element.replace('\n\n', '').
-                           replace('\n', ' ').replace('+E', ''))
+            new_element = (
+                element.replace("\n\n", "").replace("\n", " ").replace("+E", "")
+            )
             sorted_list.append(new_element)
         platforms_list.append(sorted_list)
 
-    cleaned_list = [[element.strip() for element in sublist] for sublist in platforms_list]
-    result_list = [' '.join(inner_list) for inner_list in cleaned_list]
+    cleaned_list = [
+        [element.strip() for element in sublist] for sublist in platforms_list
+    ]
+    result_list = [" ".join(inner_list) for inner_list in cleaned_list]
 
     return result_list
 
@@ -46,9 +50,9 @@ Base.metadata.create_all(engine)
 def get_prices() -> List:
     prices_list = []
     for price in prices:
-        if 'bg-premium' not in price.get('class'):
-            price_without_spaces = price.text.replace(" ", '').replace("\n", '')
-            decode_price = price_without_spaces.split('\n')
+        if "bg-premium" not in price.get("class"):
+            price_without_spaces = price.text.replace(" ", "").replace("\n", "")
+            decode_price = price_without_spaces.split("\n")
 
             for i in decode_price:
                 if i.startswith("₺"):
@@ -73,27 +77,28 @@ def get_links():
 
 
 def get_links_to_store():
-    print(f'\nНайдено {len(get_links())} ссылок/ки\n')
-    print('Программа проходит по ссылкам, пожалуйста, ожидайте...\n')
+    print(f"\nНайдено {len(get_links())} ссылок/ки\n")
+    print("Программа проходит по ссылкам, пожалуйста, ожидайте...\n")
 
     links_to_store = []
     count = 0
     for i in get_links():
         result = requests.get(i)
         count += 1
-        print(f'Пройдено ссылок: {count}')
-        links_soup = BeautifulSoup(result.content, 'html.parser')
-        game_links = links_soup.find_all('a')
+        print(f"Пройдено ссылок: {count}")
+        links_soup = BeautifulSoup(result.content, "html.parser")
+        game_links = links_soup.find_all("a")
         for link in game_links:
-            store_link = str(link.get('href'))
-            if store_link.startswith('/game/buy/'):
-                links_to_store.append(f'https://psprices.com{store_link}')
+            store_link = str(link.get("href"))
+            if store_link.startswith("/game/buy/"):
+                links_to_store.append(f"https://psprices.com{store_link}")
     return links_to_store
 
 
 def create_new_list():
-    new_list = list(zip(get_games(), get_platforms(),
-                        get_prices(), get_links_to_store()))
+    new_list = list(
+        zip(get_games(), get_platforms(), get_prices(), get_links_to_store())
+    )
     print("\nИдёт запись в документ и базу данных, пожалуйста, ожидайте...")
     print(f"\nПройдено и выведено ссылок в документ: {len(new_list)}")
     return new_list
@@ -101,10 +106,7 @@ def create_new_list():
 
 def insert_into_db():
     for i in create_new_list():
-        new_games = Game(game_name=i[0],
-                         platform=i[1],
-                         price=i[2],
-                         link=i[3])
+        new_games = Game(game_name=i[0], platform=i[1], price=i[2], link=i[3])
 
         session.add(new_games)
         session.commit()
