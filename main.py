@@ -7,6 +7,7 @@ from models import Game, session, Base, engine
 
 game_name = input("Введите название игры: ")
 game_name_encode = game_name.replace(" ", "+")
+game_name_for_txt = game_name.replace(" ", "_")
 
 URL = f"https://psprices.com/region-tr/games/?q={game_name_encode}&content_type="
 
@@ -71,9 +72,30 @@ def get_links():
     return links_list
 
 
+def get_links_to_store():
+    print(f'\nНайдено {len(get_links())} ссылок/ки\n')
+    print('Программа проходит по ссылкам, пожалуйста, ожидайте...\n')
+
+    links_to_store = []
+    count = 0
+    for i in get_links():
+        result = requests.get(i)
+        count += 1
+        print(f'Пройдено ссылок: {count}')
+        links_soup = BeautifulSoup(result.content, 'html.parser')
+        game_links = links_soup.find_all('a')
+        for link in game_links:
+            store_link = str(link.get('href'))
+            if store_link.startswith('/game/buy/'):
+                links_to_store.append(f'https://psprices.com{store_link}')
+    return links_to_store
+
+
 def create_new_list():
     new_list = list(zip(get_games(), get_platforms(),
-                        get_prices(), get_links()))
+                        get_prices(), get_links_to_store()))
+    print("\nИдёт запись в документ и базу данных, пожалуйста, ожидайте...")
+    print(f"\nПройдено и выведено ссылок в документ: {len(new_list)}")
     return new_list
 
 
@@ -86,7 +108,7 @@ def insert_into_db():
 
         session.add(new_games)
         session.commit()
-        with open(f"result_{game_name}", "a") as file:
+        with open(f"result_{game_name_for_txt}", "a") as file:
             file.write(f"{i[0]}, {i[1]}, {i[2]}\n{i[3]}\n\n")
 
 
