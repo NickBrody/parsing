@@ -19,12 +19,18 @@ games = soup.find_all(
 )
 prices = soup.find_all("span", {"class": "font-bold"})
 
-platforms = soup.find_all("img", {"class": "rounded-b aspect-square object-contain w-full"})
+platforms = soup.find_all(
+    "img", {"class": "rounded-b aspect-square object-contain w-full"}
+)
 
 Base.metadata.create_all(engine)
 
 
-def get_platforms():
+def get_platforms() -> List:
+    """
+    Возвращает список платформ для дальнейшей работы
+    :return: List
+    """
     platforms_list = []
     for p in platforms:
         if "api.playstation" in p["data-src"]:
@@ -35,6 +41,10 @@ def get_platforms():
 
 
 def get_prices() -> List:
+    """
+    Возвращает список цен для дальнейшей работы
+    :return: List
+    """
     prices_list = []
     for price in prices:
         if "bg-premium" not in price.get("class"):
@@ -47,14 +57,22 @@ def get_prices() -> List:
     return prices_list
 
 
-def get_games():
+def get_games() -> List:
+    """
+    Возвращает список игр для дальнейшей работы
+    :return: List
+    """
     games_list = []
     for game in games:
         games_list.append(game.text)
     return games_list
 
 
-def get_links():
+def get_links() -> List:
+    """
+    Возвращает список ссылок, которые будем парсить
+    :return: List
+    """
     links_list = []
     for link in links:
         str_link = str(link["href"])
@@ -63,7 +81,11 @@ def get_links():
     return links_list
 
 
-def get_links_to_store():
+def get_links_to_store() -> List:
+    """
+    Возвращает список ссылок дял вывода
+    :return: List
+    """
     print(f"\nНайдено {len(get_links())} ссылок/ки\n")
     print("Программа проходит по ссылкам, пожалуйста, ожидайте...\n")
 
@@ -82,8 +104,13 @@ def get_links_to_store():
     return links_to_store
 
 
-def create_new_list():
-    print(get_games())
+def create_new_list() -> List:
+    """
+    Возвращает список, содержащий результаты выполнения предыдущих функций,
+    для добавления данных в бд и вывода в документ пользователю
+    :return: List
+    """
+
     new_list = list(
         zip(get_games(), get_platforms(), get_prices(), get_links_to_store())
     )
@@ -92,10 +119,13 @@ def create_new_list():
     return new_list
 
 
-def insert_into_db():
+def insert_into_db() -> None:
+    """
+    Вставляет данные в бд и возвращает в .txt идентичную информацию пользователю
+    :return: None
+    """
     for i in create_new_list():
         new_games = Game(game_name=i[0], platform=i[1], price=i[2], link=i[3])
-
         session.add(new_games)
         session.commit()
         with open(f"result_{game_name_for_txt}", "a") as file:
