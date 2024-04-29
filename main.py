@@ -20,12 +20,13 @@ games = soup.find_all(
 prices = soup.find_all("span", {"class": "font-bold"})
 
 platforms = soup.find_all(
-    "img", {"class": "rounded-b aspect-square object-contain w-full"}
-)
+    "img", {'class': "rounded-b-sm aspect-square object-contain w-full"})
 
 Base.metadata.create_all(engine)
 
-
+with open("t.txt", "w") as file:
+    for i in platforms:
+        file.write(f"{str(i)}\n")
 def get_platforms() -> List:
     """
     Возвращает список платформ для дальнейшей работы
@@ -110,7 +111,6 @@ def create_new_list() -> List:
     для добавления данных в бд и вывода в документ пользователю
     :return: List
     """
-
     new_list = list(
         zip(get_games(), get_platforms(), get_prices(), get_links_to_store())
     )
